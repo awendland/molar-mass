@@ -1,0 +1,102 @@
+@import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono);
+
+body {
+    background: #eee;
+    font-family: 'Ubuntu Mono', sans-serif;
+    font-size: 26px/12px;
+}
+
+li {
+    list-style: none;
+}
+
+.wrapper {
+    width: 380px;
+    margin: 40px auto;
+}
+
+input {
+    width: 300px;
+    border-radius: 2px;
+    border: 2px solid #eaeaea;
+    padding: .5em;
+}
+
+button {
+    padding: .5em;
+    min-width: 40px;
+}
+
+.wrapper #result {
+    text-align: center;
+}
+
+.enchanced-table {
+   width: 100%;
+   font-size: 1.2em;
+}
+.enchanced-table thead th {
+   white-space: nowrap;
+   border-bottom: 1px solid #ccc;
+   color: #888;
+}
+.enchanced-table th, .enchanced-table td {
+   padding: .5em 1em;
+   text-align: right;
+}
+.enchanced-table th:first-child, 
+.enchanced-table td:first-child {
+   text-align: left;
+}
+.enchanced-table tbody th, .enchanced-table td {
+   border-bottom: 1px solid #e6e6e6;
+}
+.enchanced-table th span {
+    display: block;
+    opacity: .5;
+    font-size: .8em;
+}
+.enchanced-table th,
+.enchanced-table td {
+   display: none;
+}
+.enchanced-table th.essential, 
+.enchanced-table td.essential {
+   display: table-cell;
+}
+@media screen and (min-width: 500px) {
+   .enchanced-table th.optional, 
+   .enchanced-table td.optional {
+      display: table-cell;
+   }
+}
+
+@media screen and (min-width: 800px) {
+   .enchanced-table th, 
+   .enchanced-table td {
+      display: table-cell;
+   }
+}
+.table-menu-wrapper {
+   position: absolute;
+   top: -3em;
+   right: 0;
+}
+.table-menu {
+   position: absolute;   
+   right: 0;
+   left: auto;
+   background-color: #fff;
+   padding: 10px;
+   border: 1px solid #ccc;
+   font-size: 1.2em;
+   width: 12em;
+}
+.table-menu-hidden {
+   left: -999em;
+   right: auto;
+}
+.table-wrapper {
+   position: relative;
+   margin: 5em 5%;
+}
