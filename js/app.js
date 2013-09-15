@@ -12,11 +12,19 @@ app.controller('chemMainCtrl', ['$scope', '$location', 'chemElemAlgo', 'chemUtil
     $scope.$on('$locationChangeSuccess', function (event, newLoc, oldLoc) {
         var urlFrags = newLoc.split("/");
         var formula = decodeURIComponent(urlFrags[urlFrags.length - 1]);
+        $scope.rawFormulaInput = formula;
+        $scope.ui = {focusedElement: ""};
         if (formula !== "index.html") {
             var result = elemAlgo.parseFormula(formula);
             if (result != null) {
                 $scope.elementParts = result.elems;
                 $scope.molarMass = result.total;
+                
+                $scope.elementOrder = [];
+                for (var s in $scope.elementParts) {$scope.elementOrder.push(s)};
+                $scope.elementOrder.sort(function (a, b) {
+                     return $scope.elementParts[b].fraction - $scope.elementParts[a].fraction;
+                 });
             } else {
                 $scope.elementParts = {};
                 $scope.molarMass = "Invalid Formula";
@@ -28,9 +36,9 @@ app.controller('chemMainCtrl', ['$scope', '$location', 'chemElemAlgo', 'chemUtil
 app.directive('formulaInput', ['$location', function($location) {
     return {
         restrict: 'A',
-        template:   "<div>" +
+        template:   "<div class='input-container'>" +
                         "<input type='text' ng-model='rawFormulaInput'></input>" +
-                        "<button ng-click='submit(rawFormulaInput)'>Go</button>" +
+                        '<span ng-click="submit(rawFormulaInput)" class="button"><strong>Go</strong></span>' +
                     "</div>",
         link: function(scope, elem, attrs) {
             scope.submit = function(f) {
@@ -41,67 +49,108 @@ app.directive('formulaInput', ['$location', function($location) {
     }
 }]);
 
-app.directive('formulaChart', ['chemUtils', function(chemUtils) {
+app.directive('formulaChart', ['chemUtils', 'chemUI', function(chemUtils, ui) {
     return {
         restrict: 'A',
         scope: {
-            
+            elements: '=',
+            focusedElement: '='
         },
+        template: '<div class="chart"></div>',
+        replace: true,
         link: function(scope, elem, attrs) {
-            
+            var r = Raphael(elem[0]);
+            scope.$watch('elements', function (newVal, oldVal) {
+                if (newVal) {
+                    r.clear();
+                    var elems = newVal, portions = [];
+                    for (var s in elems) {
+                        portions.push({value: elems[s].fraction, id: s});
+                    }
+                    var pie = r.piechart(120, 120, 100, portions, {colors:ui.colors});
+                   /* for(var index_i=0;index_i < pie.covers.items.length;index_i++){
+                        pie.covers.items[index_i].click(function() {
+                            console.log(this.id);});
+                    }*/
+                    var onHover = function (slice) {
+                        scope.$apply(function () {
+                            scope.focusedElement = slice.value.identifier;
+                        });
+                        slice.sector.stop();
+                        slice.sector.animate({
+                            transform: 's1.1 1.1 ' + slice.cx + ' ' + slice.cy
+                        }, 150, "<>");
+                    }
+                    var offHover = function (slice) {
+                        scope.$apply(function () {
+                            scope.focusedElement = "";
+                        });
+                        slice.sector.animate({
+                            transform: 's1 1 ' + slice.cx + ' ' + slice.cy
+                        }, 500, "bounce");
+                    }
+                    pie.hover(function () {
+                            onHover(this);
+                        },function () {
+                            offHover(this);
+                    });
+                }
+            });
         }
     }
 }]);
 
-app.directive('formulaBreakdown', ['chemUtils', function(chemUtils) {
+app.directive('formulaBreakdown', ['chemUtils', 'chemUI', function(chemUtils, ui) {
     return {
         restrict: 'A',
         scope: {
-            elements: '='
+            elements: '=',
+            elementOrder: '=',
+            focusedElement: '='
         },
-        template:   '<div class="table-wrapper">' +
-                        '<div class="table-menu-wrapper">' +
-                           '<button class="table-menu-btn" ng-click="showMenu = !showMenu">Display</button>' +
-                           '<div class="table-menu ng-class:{\'table-menu-hidden\': !showMenu}">' +
-                              '<ul>' +
-                                 '<li ng-repeat="column in columns|filter:{class:\'!persist\'}">' +
-                                    '<input type="checkbox" ng-model="column.display">' +
-                                    '<label for="toggle-col-1">{{column.name}}</label>' +
-                                 '</li>' +
-                              '</ul>' +
-                           '</div>' +
-                        '</div>' +
-                        '<table cellspacing="0" id="element-breakdown" class="enchanced-table">' +
-                            '<thead><tr>' +
-                                '<th ng-repeat="column in columns" class="{{column.class}}">{{column.name}}</th>' +
-                            '</tr></thead>' +
-                            '<tbody>' +
-                                '<tr ng-repeat="element in elements">' +
-                                    '<th class="{{columns[0].class}}">{{element.symbol}}<span class="name">{{element.name}}</div></th>' +
-                                    '<td class="{{columns[1].class}}">{{element.mass|limitDecimal:2}}</td>' +
-                                    '<td class="{{columns[2].class}}">{{element.count}}</td>' +
-                                    '<td class="{{columns[3].class}}">{{element.fraction * 100|limitDecimal:2}}%</td>' +
-                                    '<td class="{{columns[4].class}}">{{element.total|limitDecimal:2}}</td>' +
-                                '</tr>' +
-                            '</tbody>' +
-                        '</table>' +
-                    '</div>',
+        template:   '<table class="breakdown"><tbody>' +
+                        '<thead>' +
+                            '<th></th><th class="name">Name</th><th class="count">Count</th><th class="mass">g / mol</th>' +
+                        '</thead>' +
+                        '<tr class="element" ng-class="{focused: focusedElement === sym}" ng-repeat="sym in elementOrder" name="{{sym}}" >' +
+                            '<td class="symbol" style="background-color: {{colors[elementOrder.indexOf(sym)]}}; border-color: {{colors[elementOrder.indexOf(sym)]}}">' +
+                                '<strong>{{sym}}</strong>' +
+                            '</td>' +
+                            '<td class="name">' +
+                                '{{elements[sym].name}}' +
+                            '</td>' +
+                            '<td class="count">' +
+                                '{{elements[sym].count}}' +
+                            '</td>' +
+                            '<td class="mass">' +
+                                '{{elements[sym].mass.toFixed(2)}}' +
+                            '</td>' +
+                        '</tr>' +
+                    '</tbody></table>',
         replace: true,
         link: function (scope, elem, attrs) {
-            scope.columns = [{name: "Symbol",ns: "symbol",class: "essential persist"},{name: "Mass", class: "essential"},{name: "Count", class: "optional"},{name: "Fraction", class: "optional"},{name: "Total", class: "essential"}];
+            scope.colors = ui.colors;
+            scope.$watch('focusedElement', function(newVal, oldVal) {
+                console.log(newVal);
+            });
         }
     }
 }]);
+
+app.service('chemUI', function() {
+    this.colors = ['#2ECC71','#3498DB','#9B59B6','#F1C40F','#E67E22','#E74C3C','#34495E','#27AE60','#2980B9','#8E44AD','#F39C12','#D35400','#C0392B','#BDC3C7'];
+});
 
 app.directive('molarMass', ['chemUtils', function (utils) {
     return {
         restrict: 'A',
-        template:   '<h3>{{processedValue}}</h3>',
+        template:   '<h3 class="molar-mass">{{processedValue}}</h3>',
         scope: {
             massValue: '=',
             massUnits: '=?',
             numberDecimals: '=?'
         },
+        replace: true,
         link: function(scope, elem, attrs) {
             scope.massUnits = scope.massUnits || "g/mol";
             scope.numberDecimals = scope.numberDecimals || 3;
@@ -167,17 +216,17 @@ app.service('chemElemAlgo', ['chemElements', 'chemUtils', function (elements, ut
             for (var i = 0; i < n.value.length; i++) {
                 var o = n.value[i];
                 if (o.type === 'elem') {
-                    var element = elements.lookup(o.value);
-                    if (element === 'undefined')
+                    var e = elements.lookup(o.value);
+                    if (e === 'undefined')
                         throw {name: "InvalidElementError"};
-                    var dataElem = data.elems[element.symbol] = data.elems[element.symbol] || {};
-                    dataElem.count = dataElem.count || 0 + 1;
-                    dataElem.total = dataElem.total || 0 + element.mass;
-                    dataElem.mass = element.mass;
-                    dataElem.symbol = element.symbol;
-                    dataElem.name = element.name;
-                    lv = {total: dataElem.mass, elems: {}};
-                    lv.elems[dataElem.symbol] = dataElem;
+                    var eData = data.elems[e.symbol] = data.elems[e.symbol] || {};
+                    eData.count = eData.count || 0 + 1;
+                    eData.total = eData.total || 0 + e.mass;
+                    eData.mass = e.mass;
+                    eData.symbol = e.symbol;
+                    eData.name = e.name;
+                    lv = {total: eData.mass, elems: {}};
+                    lv.elems[e.symbol] = eData;
                 } else if (o.type === 'mult') {
                     for (var sym in lv.elems) {
                         if (lv.elems.hasOwnProperty(sym)) {

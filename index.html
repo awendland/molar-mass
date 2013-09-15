@@ -3,21 +3,22 @@
     
     <head>
         <meta charset="utf-8">
-        
         <title>Molecular Weight Calculator</title>
         <meta name="description" content="A JavaScript based Molecular Mass Calculator for Chemistry">
         <meta name="author" content="Alex Wendland">
-        
         <meta name="viewport" content="width=device-width">
-        
         <link rel="stylesheet" href="css/main.css">
+        <!-- JSON3 from the CloudFare CDN: cdnjs.com. Used for IE polyfill -->
+        <!--[if lte IE 8]>
+            <script src="//cdnjs.cloudflare.com/ajax/libs/json3/3.2.4/json3.js"></script>
+        <![endif]-->
         <!-- AngularJS from Google's CDN -->
         <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
         <!-- Raphael JavaScript - Vector Graphics Library - http://raphaeljs.com/ -->
         <script src="lib/raphael-min.js"></script>
         <!-- gRaphael JavaScript - Graphing Library - http://g.raphaeljs.com/ -->
         <script src="lib/g.raphael-min.js"></script>
-        <script src="lib/g.pie-min.js"></script>
+        <script src="lib/g.pie.js"></script>
         <!-- ChemMolecCalc JavaScript -->
         <script src="js/app.js"></script>
         <!-- Handles any IE 8 and below inconsistancies -->
@@ -26,11 +27,18 @@
         <![endif]-->
     </head>
     
-    <body ng-app="chemMolecWeights">
-        <div ng-controller="chemMainCtrl">
-            <div formula-input class="wrapper"></div>
-            <div formula-breakdown elements="elementParts"></div>
-            <div molar-mass mass-value="molarMass" class="wrapper"></div>
+    <body id="ng-app" class="ng-app:chemMolecWeights" ng-app="chemMolecWeights">
+        <div ng-controller="chemMainCtrl" id="content">
+            <section class="card">
+                <div formula-input></div>
+            </section>
+            <section class="card card-anim">
+                <div formula-chart elements="elementParts" focused-element="ui.focusedElement"></div>
+                <div formula-breakdown elements="elementParts" element-order="elementOrder" focused-element="ui.focusedElement"></div>
+            </section>
+            <section class="card card-anim">
+                <div molar-mass mass-value="molarMass"></div>
+            </section>
         </div>
     </body>
 
