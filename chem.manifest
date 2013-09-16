@@ -1,0 +1,13 @@
+CACHE MANIFEST
+# v 1.0 / 2013-09-15
+
+CACHE:
+index.html
+js/app.js
+css/main.css
+lib/raphael-min.js
+lib/g.raphael-min.js
+lib/g.pie.js
+
+NETWORK:
+*
