@@ -1,5 +1,7 @@
 var app = angular.module("chemMolecWeights", []);
 
+/* App Configuration */
+
 app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $routeProvider.
         when('/', {}).
@@ -7,38 +9,56 @@ app.config(['$routeProvider', '$locationProvider', function($routeProvider, $loc
     //$locationProvider.html5Mode(true);
 }]);
 
-app.controller('chemMainCtrl', ['$scope', '$location', 'chemElemAlgo', 'chemUtils', function ($scope, $location, elemAlgo, utils) {
-    'use strict';
+/* App Flow/Logic */
+
+app.controller('chemRootCtrl', ['$scope', '$location', '_', 'chemistryUtils', function ($scope, $location, $_, chemU) {
+    /* On URL Change, triggered by page load AND by user input */
     $scope.$on('$locationChangeSuccess', function (event, newLoc, oldLoc) {
+        /* Split up URL */
         var urlFrags = newLoc.split("/");
-        var formula = decodeURIComponent(urlFrags[urlFrags.length - 1]);
-        $scope.rawFormulaInput = formula;
-        $scope.ui = {focusedElement: ""};
-        if (formula !== "index.html") {
-            var result = elemAlgo.parseFormula(formula);
-            if (result != null) {
-                $scope.elementParts = result.elems;
-                $scope.molarMass = result.total;
-                
-                $scope.elementOrder = [];
-                for (var s in $scope.elementParts) {$scope.elementOrder.push(s)};
-                $scope.elementOrder.sort(function (a, b) {
-                     return $scope.elementParts[b].fraction - $scope.elementParts[a].fraction;
-                 });
-            } else {
-                $scope.elementParts = {};
-                $scope.molarMass = "Invalid Formula";
-            }
-        }
+        /* Extract formula from URL and save to $scope */
+        $scope.formula = decodeURIComponent($_.last(urlFrags));
+        /* Broadcast formula change */
+        $scope.$broadcast('newFormula');
     });
 }]);
+
+app.controller('chemActionCtrl', ['$scope', 'chemistryFormulaAnalyzer', '_', function ($scope, $chemistryFA, $_) {
+    'use strict';
+    /* Initial values */
+    $scope.ui = {};
+    /* On formula change */
+    $scope.$on('newFormula', function () {
+        /* Parse formula */
+        $scope.formulaAnalysis = $scope.f = $chemistryFA.parseFormula($scope.formula);
+        /* Simply running the parser/analyzer is the most effective
+         * way to decide if the formula is valid or not */
+        $scope.populateView();
+    });
+    $scope.populateView = function () {
+        if ($scope.formulaAnalysis != null) { // Valid formula
+            /* Setup variables for managing view state */
+            $scope.ui.isValid = true;
+            $scope.ui.focused = "";
+            $scope.ui.order = $_.sortKeys($scope.f.elems);
+            /* Demo: */
+            $_.forEachSorted($scope.f.elems, "total", false, function (v) {
+                console.log(v);
+            });
+        } else { // Invalid formula, failed to parse
+            $scope.ui.isValid = false;
+        }
+    }
+}]);
+
+/* App Views/UI*/
 
 app.directive('formulaInput', ['$location', function($location) {
     return {
         restrict: 'A',
         template:   "<div class='input-container'>" +
-                        "<input type='text' ng-model='rawFormulaInput'></input>" +
-                        '<span ng-click="submit(rawFormulaInput)" class="button"><strong>Go</strong></span>' +
+                        '<input type="text" ng-model="formula" ng-enter="submit(formula)"></input>' +
+                        '<span ng-click="submit(formula)" class="button"><strong>Go</strong></span>' +
                     "</div>",
         link: function(scope, elem, attrs) {
             scope.submit = function(f) {
@@ -49,7 +69,7 @@ app.directive('formulaInput', ['$location', function($location) {
     }
 }]);
 
-app.directive('formulaChart', ['chemUtils', 'chemUI', function(chemUtils, ui) {
+app.directive('formulaChart', ['chemUIConst', function(uiConst) {
     return {
         restrict: 'A',
         scope: {
@@ -67,7 +87,7 @@ app.directive('formulaChart', ['chemUtils', 'chemUI', function(chemUtils, ui) {
                     for (var s in elems) {
                         portions.push({value: elems[s].fraction, id: s});
                     }
-                    var pie = r.piechart(120, 120, 100, portions, {colors:ui.colors});
+                    var pie = r.piechart(120, 120, 100, portions, {colors:uiConst.colors});
                    /* for(var index_i=0;index_i < pie.covers.items.length;index_i++){
                         pie.covers.items[index_i].click(function() {
                             console.log(this.id);});
@@ -100,7 +120,7 @@ app.directive('formulaChart', ['chemUtils', 'chemUI', function(chemUtils, ui) {
     }
 }]);
 
-app.directive('formulaBreakdown', ['chemUtils', 'chemUI', function(chemUtils, ui) {
+app.directive('formulaBreakdown', ['chemUIConst', function(uiConst) {
     return {
         restrict: 'A',
         scope: {
@@ -113,7 +133,7 @@ app.directive('formulaBreakdown', ['chemUtils', 'chemUI', function(chemUtils, ui
                             '<th></th><th class="name">Name</th><th class="count">Count</th><th class="mass">g / mol</th>' +
                         '</thead>' +
                         '<tr class="element" ng-class="{focused: focusedElement === sym}" ng-repeat="sym in elementOrder" name="{{sym}}" >' +
-                            '<td class="symbol" style="background-color: {{colors[elementOrder.indexOf(sym)]}}; border-color: {{colors[elementOrder.indexOf(sym)]}}">' +
+                            '<td class="symbol" style="background-color: {{uiConst.getColor(elementOrder.indexOf(sym))}}; border-color: {{uiConst.getColor(elementOrder.indexOf(sym))}}">' +
                                 '<strong>{{sym}}</strong>' +
                             '</td>' +
                             '<td class="name">' +
@@ -129,22 +149,28 @@ app.directive('formulaBreakdown', ['chemUtils', 'chemUI', function(chemUtils, ui
                     '</tbody></table>',
         replace: true,
         link: function (scope, elem, attrs) {
-            scope.colors = ui.colors;
+            scope.uiConst = uiConst;
             scope.$watch('focusedElement', function(newVal, oldVal) {
-                console.log(newVal);
+                console.log(uiConst.getColor(scope.elementOrder.indexOf(newVal)));
             });
         }
     }
 }]);
 
-app.service('chemUI', function() {
-    this.colors = ['#2ECC71','#3498DB','#9B59B6','#F1C40F','#E67E22','#E74C3C','#34495E','#27AE60','#2980B9','#8E44AD','#F39C12','#D35400','#C0392B','#BDC3C7'];
+app.service('chemUIConst', function() {
+    this.colors = ['#2ECC71','#3498DB','#9B59B6',
+                   '#F1C40F','#E67E22','#E74C3C','#34495E',
+                   '#27AE60','#2980B9','#8E44AD','#F39C12',
+                   '#D35400','#C0392B','#BDC3C7'];
+    this.getColor = function (i) {
+        return this.colors[i % this.colors.length];
+    }
 });
 
-app.directive('molarMass', ['chemUtils', function (utils) {
+app.directive('molarMass', ['_', function ($_) {
     return {
         restrict: 'A',
-        template:   '<h3 class="molar-mass">{{processedValue}}</h3>',
+        template:   '<h3 class="molar-mass big-center">{{processedValue}}</h3>',
         scope: {
             massValue: '=',
             massUnits: '=?',
@@ -155,8 +181,8 @@ app.directive('molarMass', ['chemUtils', function (utils) {
             scope.massUnits = scope.massUnits || "g/mol";
             scope.numberDecimals = scope.numberDecimals || 3;
             var processValue = function() {
-                if (utils.isNumber(scope.massValue)) {
-                    scope.processedValue = utils.limitDecimals(scope.massValue, scope.numberDecimals) + " " + scope.massUnits;
+                if ($_.isNumber(scope.massValue)) {
+                    scope.processedValue = $_.limitDecimals(scope.massValue, scope.numberDecimals) + " " + scope.massUnits;
                 } else {
                     scope.processedValue = scope.massValue;
                 }
@@ -169,7 +195,126 @@ app.directive('molarMass', ['chemUtils', function (utils) {
     }
 }]);
 
-app.service('chemElemAlgo', ['chemElements', 'chemUtils', function (elements, utils) {
+/* General JS Assist Functions in a AngularJS Wrapper */
+
+app.factory('_', function () {
+    var REGEX_UPPERCASE = new RegExp("[A-Z]");
+    var REGEX_LOWERCASE = new RegExp("[a-z]");
+    return {
+        isLetterUpperCase: function(c) {
+            return REGEX_UPPERCASE.test(c);
+        },
+        isLetterLowerCase: function (c) {
+            return REGEX_LOWERCASE.test(c);
+        },
+        isNumber: function (o) {
+            return !isNaN(o * 1);
+        },
+        limitDecimals: function(n, l) {
+            return Math.round(n*Math.pow(10, l))/Math.pow(10, l);
+        },
+        last: function (a) {
+            return a[a.length - 1];
+        },
+        sortKeys: function (a, p, u) {
+            var o = [];
+            for (var k in a) {
+                if (a.hasOwnProperty(k))
+                    o.push(k);
+            };
+            o.sort(function (y, z) {
+                if (u)
+                    return a[y][p] - a[z][p];
+                else
+                    return a[z][p] - a[y][p];
+             });
+            return o;
+        },
+        /* param
+         *   a - Array to loop through
+         *   p - Property to sort by
+         *   u - Sort A-Z or Z-A
+         *   f - Function to call on each property
+         */
+        forEachSorted: function (a, p, u, f) {
+            var o = this.sortKeys(a);
+            for (var i = 0; i < o.length; i++) {
+                f(a[o[i]]);
+            }
+        }
+    }
+});
+
+/* AngularJS Helper Functions/Services/Filters/Directives */
+
+app.filter('limitDecimal', function() {
+    return function (n, d) {
+        return Math.round(n*Math.pow(10, d))/Math.pow(10, d);
+    }
+});
+
+app.directive('ngEnter', function () {
+    return function (scope, element, attrs) {
+        element.bind("keydown keypress", function (event) {
+            if(event.which === 13) {
+                scope.$apply(function (){
+                    scope.$eval(attrs.ngEnter);
+                });
+                event.preventDefault();
+            }
+        });
+    };
+});
+
+/* JavaScript Chemical/Formula Analyzer and Helper Functions */
+
+app.service('chemistryUtils', function() {
+    var REGEX_CHEMICAL_FORMULA = new RegExp("^(([A-Z][a-z]{0,2})|[\(\)\d])+$");
+    this.isPossibleChemicalFormula = function(c) {
+        return REGEX_CHEMICAL_FORMULA.test(c);
+    }
+});
+
+app.service('chemistryFormulaAnalyzer', ['chemistryElements', '_', function (elements, utils) {
+    /* For API convenience */
+    this.analyze = this.parseFormula;
+
+    /* Runs the works on the supplied formula */
+    this.parseFormula = function(f) {
+        var nodeTree = this.buildNodeTree(f);
+        if (nodeTree === null)
+            return null;
+        return this.analyzeNodeTree(nodeTree);
+    }
+
+    /* Example result:
+     *
+     * Input: "H2O"
+     * Return: {
+     *      elems: {
+     *          H: {
+     *              count: 2,
+     *              fraction: 0.1118983440,
+     *              mass: 1.00794,
+     *              name: "Hydrogen",
+     *              symbol: "H",
+     *              total: 2.01588
+     *          },
+     *          O: {
+     *              count: 1,
+     *              fraction: 0.8881016559,
+     *              mass: 15.9994,
+     *              name: "Oxygen",
+     *              symbol: "O",
+     *              total: 15.9994
+     *          }
+     *      },
+     *      total: 18.01528
+     * }
+     */
+
+    /* The real work begins here */
+
     this.buildNodeTree = function(f) {
         try {
             // Check for a zero length input
@@ -267,42 +412,9 @@ app.service('chemElemAlgo', ['chemElements', 'chemUtils', function (elements, ut
             return null;
         }
     }
-    this.parseFormula = function(f) {
-        var nodeTree = this.buildNodeTree(f);
-        if (nodeTree === null)
-            return null;
-        return this.analyzeNodeTree(nodeTree);
-    }
 }]);
 
-app.service('chemUtils', function() {
-    var REGEX_UPPERCASE = new RegExp("[A-Z]");
-    var REGEX_LOWERCASE = new RegExp("[a-z]");
-    this.isLetterUpperCase = function(c) {
-        return REGEX_UPPERCASE.test(c);
-    }
-    this.isLetterLowerCase = function(c) {
-        return REGEX_LOWERCASE.test(c);
-    }
-    this.isNumber = function(o) {
-        return !isNaN(o * 1);
-    }
-    var REGEX_CHEMICAL_FORMULA = new RegExp("^(([A-Z][a-z]{0,2})|[\(\)\d])+$");
-    this.isPossibleChemicalFormula = function(c) {
-        return REGEX_CHEMICAL_FORMULA.test(c);
-    }
-    this.limitDecimals = function(n, l) {
-        return Math.round(n*Math.pow(10, l))/Math.pow(10, l);
-    }
-});
-
-app.filter('limitDecimal', function() {
-    return function (n, d) {
-        return Math.round(n*Math.pow(10, d))/Math.pow(10, d);
-    }
-});
-
-app.service('chemElements', function () {
+app.service('chemistryElements', function () {
     var service = {
         get: function (a) {
             return elements[a];
