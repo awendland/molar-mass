@@ -8,7 +8,7 @@
         <meta name="description" content="A JavaScript based Molecular Mass Calculator for Chemistry">
         <meta name="author" content="Alex Wendland">
         <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/main.prefixed.css">
         <!-- JSON3 from the CloudFare CDN: cdnjs.com. Used for IE polyfill -->
         <!--[if lte IE 8]>
             <script src="//cdnjs.cloudflare.com/ajax/libs/json3/3.2.4/json3.js"></script>
@@ -34,14 +34,14 @@
                 <section class="card">
                     <div formula-input></div>
                 </section>
-                <section class="card card-anim no-delay" ng-class="{hidden: !ui.isValid}">
+                <section class="card card-anim no-delay" ng-class="{hidden: !ui.isValid || ui.hideAll}">
                     <div formula-chart elements="f.elems" focused-element="ui.focused"></div>
                     <div formula-breakdown elements="f.elems" element-order="ui.order" focused-element="ui.focused"></div>
                 </section>
-                <section class="card card-anim" ng-class="{hidden: !ui.isValid}">
+                <section class="card card-anim" ng-class="{hidden: !ui.isValid || ui.hideAll}">
                     <div molar-mass mass-value="f.total"></div>
                 </section>
-                <section class="card card-anim no-delay" ng-class="{hidden: ui.isValid}">
+                <section class="card card-anim no-delay" ng-class="{hidden: ui.isValid || ui.hideAll}">
                     <div class="big-center">Invalid Formula</div>
                 </section>
             </div>

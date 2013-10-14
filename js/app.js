@@ -26,6 +26,9 @@ app.controller('chemRootCtrl', ['$scope', '$location', '_', 'chemistryUtils', fu
         var urlFrags = newLoc.split("/");
         /* Extract formula from URL and save to $scope */
         $scope.formula = decodeURIComponent($_.last(urlFrags));
+        /* Test if the URL is index.html, in which case show an example formula */
+        if ($scope.formula === 'index.html' || $scope.formula === '')
+            $scope.formula = "Mg2(PO4)3";
         /* Broadcast formula change */
         $scope.$broadcast('newFormula');
     });
@@ -44,15 +47,16 @@ app.controller('chemActionCtrl', ['$scope', 'chemistryFormulaAnalyzer', '_', fun
         $scope.populateView();
     });
     $scope.populateView = function () {
+        $scope.ui.hideAll = false;
         if ($scope.formulaAnalysis != null) { // Valid formula
             /* Setup variables for managing view state */
             $scope.ui.isValid = true;
             $scope.ui.focused = "";
             $scope.ui.order = $_.sortKeys($scope.f.elems);
-            /* Demo: */
+            /* Demo:
             $_.forEachSorted($scope.f.elems, "total", false, function (v) {
                 console.log(v);
-            });
+            }); */
         } else { // Invalid formula, failed to parse
             $scope.ui.isValid = false;
         }
