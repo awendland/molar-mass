@@ -153,3 +153,41 @@ input:focus {
     color: #444;
     font-size: 30px;
 }
+
+/* Fork me on Github
+ * @author Alex Wendland
+ * Inspiration from: http://codepen.io/TimPietrusky/pen/ysqrg
+ */
+.fork-me-on-github {
+    // Positioning
+    position: absolute;
+    top: -1.75em;
+    left: 0.5em;
+    // Structure
+    padding: 0.5em;
+    font-size: 1em;
+    text-decoration: none;
+    letter-spacing: 2px;
+    // Color
+    background: #1ABC9C;
+    color: white;
+    box-shadow: 0 0 0 0.75em rgba(255, 255, 255, 0);
+    // Transtitions
+    -webkit-transition: color 0.35s ease-in, box-shadow 0.215s ease-out, top .215s ease-out;
+    -moz-transition: color 0.35s ease-in, box-shadow 0.215s ease-out, top .215s ease-out;
+    -o-transition: color 0.35s ease-in, box-shadow 0.215s ease-out, top .215s ease-out;
+    transition: color 0.35s ease-in, box-shadow 0.215s ease-out, top .215s ease-out;
+    
+    &:hover, &:focus {
+        background: white;
+        box-shadow: 0 0 0 0.25em rgba(255, 255, 255, 0.4);
+        color: #1ABC9C;
+        top: 0;
+    }
+}
+
+@media screen and (max-width: 960px) {
+    .fork-me-on-github {
+        display: none;
+    }
+}
