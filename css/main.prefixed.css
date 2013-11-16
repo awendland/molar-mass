@@ -53,21 +53,23 @@ li {
 }
 
 .card-anim {
-  -webkit-animation: fly-in-from-left 0.5s 1s ease both;
-  animation: fly-in-from-left 0.5s 1s ease both;
-  -webkit-transform-origin: top left;
-  -ms-transform-origin: top left;
-  transform-origin: top left;
+  -webkit-animation: fade-in 0.75s ease-in both, slide-in 0.5s ease both;
+  animation: fade-in 0.75s ease-in both, slide-in 0.5s ease both;
 }
 
-.card-anim:nth-child(even) {
-  -webkit-animation-name: fly-in-from-right;
-  animation-name: fly-in-from-right;
-  -webkit-animation-delay: .5s;
-  animation-delay: .5s;
-  -webkit-transform-origin: top right;
-  -ms-transform-origin: top right;
-  transform-origin: top right;
+.card-anim:nth-child(1) {
+  -webkit-animation-delay: .25s;
+  animation-delay: .25s;
+}
+
+.card-anim:nth-child(2) {
+  -webkit-animation-delay: .75s;
+  animation-delay: .75s;
+}
+
+.card-anim:nth-child(3) {
+  -webkit-animation-delay: 1.25s;
+  animation-delay: 1.25s;
 }
 
 .no-delay {
@@ -75,37 +77,49 @@ li {
   animation-delay: 0s !important;
 }
 
-@-webkit-keyframes fly-in-from-left {
-  from {
-    -webkit-transform: translateY(15rem) rotate(15deg);
-    transform: translateY(15rem) rotate(15deg);
+@-webkit-keyframes fade-in {
+  0% {
     opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
   }
 }
 
-@keyframes fly-in-from-left {
-  from {
-    -webkit-transform: translateY(15rem) rotate(15deg);
-    -ms-transform: translateY(15rem) rotate(15deg);
-    transform: translateY(15rem) rotate(15deg);
+@keyframes fade-in {
+  0% {
     opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
   }
 }
 
-@-webkit-keyframes fly-in-from-right {
-  from {
-    -webkit-transform: translateY(15rem) rotate(-15deg);
-    transform: translateY(15rem) rotate(-15deg);
-    opacity: 0;
+@-webkit-keyframes slide-in {
+  0% {
+    -webkit-transform: translateY(1em);
+    transform: translateY(1em);
+  }
+
+  100% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
   }
 }
 
-@keyframes fly-in-from-right {
-  from {
-    -webkit-transform: translateY(15rem) rotate(-15deg);
-    -ms-transform: translateY(15rem) rotate(-15deg);
-    transform: translateY(15rem) rotate(-15deg);
-    opacity: 0;
+@keyframes slide-in {
+  0% {
+    -webkit-transform: translateY(1em);
+    -ms-transform: translateY(1em);
+    transform: translateY(1em);
+  }
+
+  100% {
+    -webkit-transform: translateY(0);
+    -ms-transform: translateY(0);
+    transform: translateY(0);
   }
 }
 

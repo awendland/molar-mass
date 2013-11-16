@@ -42,13 +42,13 @@
         <![endif]-->
     </head>
     
-    <body id="ng-app" class="ng-app:chemMolarMass" ng-app="chemMolarMass">
-        <div ng-controller="chemRootCtrl">
+    <body id="ng-app" class="ng-app:chemMolarMass chemApp" ng-app="chemMolarMass">
+        <div ng-controller="chemRootCtrl" class="chemRoot">
             <div ng-controller="chemActionCtrl" id="content">
-                <section class="card">
+                <section class="card card-anim">
                     <div formula-input></div>
                 </section>
-                <section class="card card-anim no-delay" ng-class="{hidden: !ui.isValid || ui.hideAll}">
+                <section class="card card-anim" ng-class="{hidden: !ui.isValid || ui.hideAll}">
                     <div formula-chart elements="f.elems" focused-element="ui.focused"></div>
                     <div formula-breakdown elements="f.elems" element-order="ui.order" focused-element="ui.focused"></div>
                 </section>

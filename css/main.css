@@ -41,27 +41,34 @@ li {
   margin-bottom: 0px;
 }
 .card-anim {
-  animation: fly-in-from-left 0.5s 1s ease both;
-  transform-origin: top left;
+  animation: fade-in 0.75s ease-in both, slide-in 0.5s ease both;
 }
-.card-anim:nth-child(even) {
-  animation-name: fly-in-from-right;
-  animation-delay: .5s;
-  transform-origin: top right;
+.card-anim:nth-child(1) {
+  animation-delay: .25s;
+}
+.card-anim:nth-child(2) {
+  animation-delay: .75s;
+}
+.card-anim:nth-child(3) {
+  animation-delay: 1.25s;
 }
 .no-delay {
   animation-delay: 0s !important;
 }
-@keyframes fly-in-from-left {
-  from {
-    transform: translateY(15rem) rotate(15deg);
+@keyframes fade-in {
+  0% {
     opacity: 0;
   }
+  100% {
+    opacity: 1;
+  }
 }
-@keyframes fly-in-from-right {
-  from {
-    transform: translateY(15rem) rotate(-15deg);
-    opacity: 0;
+@keyframes slide-in {
+  0% {
+    transform: translateY(1em);
+  }
+  100% {
+    transform: translateY(0);
   }
 }
 .hidden {
