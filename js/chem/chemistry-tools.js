@@ -89,8 +89,8 @@ app.service('chemistryFormulaAnalyzer', ['chemistryElements', '_', function (ele
                     if (e === 'undefined')
                         throw {name: "InvalidElementError"};
                     var eData = data.elems[e.symbol] = data.elems[e.symbol] || {};
-                    eData.count = eData.count || 0 + 1;
-                    eData.total = eData.total || 0 + e.mass;
+                    eData.count = (eData.count || 0) + 1;
+                    eData.total = (eData.total || 0) + e.mass;
                     eData.mass = e.mass;
                     eData.symbol = e.symbol;
                     eData.name = e.name;
