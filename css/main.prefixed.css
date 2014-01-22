@@ -23,7 +23,7 @@ li {
   margin: 2.5% auto;
 }
 
-@media screen and (min-width: 320px) {
+@media screen and (min-width: 350px) {
   #content {
     width: 80%;
     margin: 20px auto;
@@ -31,7 +31,7 @@ li {
   }
 }
 
-@media screen and (max-width: 320px) {
+@media screen and (max-width: 350px) {
   #content {
     width: 95%;
     margin: 2.5% auto;
